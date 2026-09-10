@@ -15,6 +15,7 @@ import { api } from "../api/client";
 import { Activity, ago } from "../components/Activity";
 import { statusLabel, tone } from "../components/WorkCard";
 import { SnoozeDialog } from "../components/SnoozeDialog";
+
 type DetailItem = WorkItem & {
   dispositionHistory?: {
     status: string;
@@ -22,6 +23,7 @@ type DetailItem = WorkItem & {
     snoozedUntil: string | null;
   }[];
 };
+
 export function Detail({
   id,
   version,
@@ -38,6 +40,7 @@ export function Detail({
   const [item, setItem] = useState<DetailItem | null>(null);
   const [error, setError] = useState("");
   const [snooze, setSnooze] = useState(false);
+
   useEffect(() => {
     let live = true;
     api<DetailItem>(`/work-items/${id}`)
@@ -51,49 +54,56 @@ export function Detail({
       live = false;
     };
   }, [id, version]);
+
   const action = async (name: string, body?: unknown) => {
     const ok = await mutate(`/work-items/${id}/${name}`, body);
     if (ok) setItem(await api<DetailItem>(`/work-items/${id}`));
     return ok;
   };
+
   if (error)
     return (
-      <div className="empty">
-        <h2>Couldn’t open this item.</h2>
+      <div className="empty-state">
+        <h2>Unable to load item.</h2>
         <p>{error}</p>
-        <button onClick={onBack}>Back to Radar</button>
+        <button className="primary" onClick={onBack}>Back to Radar</button>
       </div>
     );
-  if (!item) return <div className="empty">Loading evidence…</div>;
+
+  if (!item) return <div className="empty-state">Loading item details…</div>;
+
   return (
     <>
       <button className="back-button" onClick={onBack}>
-        <ArrowLeft size={16} /> Back to Radar
+        <ArrowLeft size={15} /> Back to Radar
       </button>
+
       <div className="detail-header">
         <div>
-          <div className="eyebrow">
+          <div className="detail-type-tag">
             {item.kind === "folder" ? (
-              <Folder size={16} />
+              <Folder size={14} />
             ) : (
-              <FileText size={16} />
+              <FileText size={14} />
             )}{" "}
-            {item.kind} · {item.fileCount} tracked files
+            <span>{item.kind.toUpperCase()} · {item.fileCount} tracked file{item.fileCount === 1 ? "" : "s"}</span>
           </div>
-          <h1>{item.displayName}</h1>
+          <h1 className="detail-title">{item.displayName}</h1>
           <div className="detail-meta">
-            <span className={`status ${tone(item)}`}>
-              <span />
+            <span className={`status-pill ${tone(item)}`}>
+              <span className="status-dot" />
               {statusLabel(item)}
             </span>
-            <span>{item.relativePath}</span>
+            <span className="detail-path">{item.relativePath}</span>
           </div>
         </div>
-        <div className="detail-score">
-          <strong>{item.score}</strong>
-          <span>Unclosed Score</span>
+
+        <div className="detail-score-box">
+          <span className="score-value">{item.score}</span>
+          <span className="score-label">Score</span>
         </div>
       </div>
+
       <div className="detail-actions">
         {item.status === "OPEN" ? (
           <>
@@ -102,16 +112,16 @@ export function Detail({
               disabled={busy}
               onClick={() => void action("close")}
             >
-              <Check size={17} /> Mark closed
+              <Check size={16} /> Mark closed
             </button>
             <button disabled={busy} onClick={() => setSnooze(true)}>
-              <Clock3 size={17} /> Snooze
+              <Clock3 size={16} /> Snooze
             </button>
             <button
               disabled={busy}
               onClick={() => void action("take-off-radar")}
             >
-              <EyeOff size={17} /> Take off radar
+              <EyeOff size={16} /> Take off radar
             </button>
           </>
         ) : (
@@ -120,45 +130,48 @@ export function Detail({
             disabled={busy}
             onClick={() => void action("restore")}
           >
-            <RotateCcw size={17} />
-            {item.status === "CLOSED" ? "Reopen" : "Bring back"}
+            <RotateCcw size={16} />
+            {item.status === "CLOSED" ? "Reopen item" : "Restore to radar"}
           </button>
         )}
         {item.status === "SNOOZED" && (
-          <span>
-            Hidden until {new Date(item.snoozedUntil!).toLocaleDateString()}
+          <span className="snoozed-notice">
+            Snoozed until {new Date(item.snoozedUntil!).toLocaleDateString()}
           </span>
         )}
       </div>
+
       {!item.available && (
-        <div className="notice">
-          <Info size={18} />
-          This item wasn’t found in the latest sweep. Its previous evidence and
-          history are preserved.
+        <div className="warning-banner">
+          <Info size={16} />
+          <span>This item was not found in the latest scan. Existing history and evidence are preserved.</span>
         </div>
       )}
+
       <section className="panel detail-activity">
         <div className="section-heading">
-          <h2>Activity, observed.</h2>
+          <h2>Activity Timeline</h2>
           <span>
-            {item.history.length} scan{item.history.length === 1 ? "" : "s"}
+            {item.history.length} scan{item.history.length === 1 ? "" : "s"} observed
           </span>
         </div>
         <Activity item={item} large />
-        <p>
+        <p className="activity-caption">
           {item.lastActivityAt
-            ? `Last detected activity ${ago(item.lastActivityAt)}.`
-            : `Last file modification ${ago(item.latestModifiedAt)}. The first scan establishes a baseline; it does not establish an active period.`}
+            ? `Last activity detected ${ago(item.lastActivityAt)}.`
+            : `Last file modification ${ago(item.latestModifiedAt)}.`}
         </p>
-        <details>
+
+        <details className="history-details">
           <summary>
-            Inspect scan history <ChevronDown size={14} />
+            <span>Scan history log</span>
+            <ChevronDown size={14} />
           </summary>
           <div className="table-scroll">
             <table>
               <thead>
                 <tr>
-                  <th>Scan</th>
+                  <th>Scan Timestamp</th>
                   <th>Modified</th>
                   <th>Added</th>
                   <th>Removed</th>
@@ -169,7 +182,7 @@ export function Detail({
                   <tr key={p.scanId}>
                     <td>
                       {new Date(p.at).toLocaleString()}
-                      {p.baseline ? " · baseline" : ""}
+                      {p.baseline ? " (baseline)" : ""}
                     </td>
                     <td>{p.baseline ? "—" : p.changed}</td>
                     <td>{p.baseline ? "—" : p.added}</td>
@@ -181,41 +194,42 @@ export function Detail({
           </div>
         </details>
       </section>
+
       <div className="detail-columns">
-        <section>
+        <section className="evidence-column">
           <div className="section-heading">
-            <h2>Why this is on your radar</h2>
+            <h2>Detected Signals</h2>
+            <span>{item.signals.length} signal{item.signals.length === 1 ? "" : "s"}</span>
           </div>
-          <p className="section-description">
-            The evidence is here. The decision is yours.
-          </p>
+
           {item.signals.length === 0 && (
-            <div className="panel">
-              No unfinished-work signals in this snapshot.
+            <div className="panel empty-signals">
+              No loose ends or pending markers detected in this snapshot.
             </div>
           )}
+
           {item.signals.map((signal) => (
             <article className="panel evidence" key={signal.type}>
-              <div className="section-heading">
+              <div className="evidence-header">
                 <h3>{signal.title}</h3>
-                <span className="evidence-type">
+                <span className="evidence-badge">
                   {signal.detectorId.replaceAll("-", " ")}
                 </span>
               </div>
-              <p>{signal.explanation}</p>
+              <p className="evidence-desc">{signal.explanation}</p>
               {signal.examples.length > 0 && (
-                <ul>
+                <ul className="evidence-list">
                   {signal.examples.map((example, index) => (
                     <li key={index}>
                       <div className="evidence-path">
-                        {example.relativePath}
-                        {example.lineNumber ? `:${example.lineNumber}` : ""}
-                        {example.sheet
-                          ? ` · ${example.sheet}!${example.cell}`
-                          : ""}
+                        <code>{example.relativePath}</code>
+                        {example.lineNumber ? <span className="line-num">:{example.lineNumber}</span> : ""}
+                        {example.sheet ? (
+                          <span className="sheet-ref"> · {example.sheet}!{example.cell}</span>
+                        ) : ""}
                       </div>
                       {example.excerpt && (
-                        <div className="excerpt">{example.excerpt}</div>
+                        <pre className="evidence-code">{example.excerpt}</pre>
                       )}
                     </li>
                   ))}
@@ -223,76 +237,79 @@ export function Detail({
               )}
               {signal.count > signal.examples.length &&
                 signal.examples.length > 0 && (
-                  <small>
+                  <small className="evidence-limit">
                     Showing {signal.examples.length} of {signal.count} matches.
-                    A maximum of 50 detailed examples is stored per item.
                   </small>
                 )}
             </article>
           ))}
         </section>
-        <aside>
+
+        <aside className="sidebar-column">
           <section className="panel score-panel">
-            <h3>Score breakdown</h3>
-            <p>Evidence weights, capped at 100.</p>
-            {item.signals.map((s) => (
-              <div className="score-row" key={s.type}>
-                <span>{s.title}</span>
-                <strong>+{s.weight}</strong>
-              </div>
-            ))}
-            <div className="score-row score-total">
-              <strong>Unclosed Score</strong>
+            <h3>Score Breakdown</h3>
+            <p className="panel-sub">Calculated signal weights (max 100).</p>
+            <div className="score-breakdown-list">
+              {item.signals.map((s) => (
+                <div className="score-row" key={s.type}>
+                  <span className="score-signal-title">{s.title}</span>
+                  <span className="score-signal-weight">+{s.weight}</span>
+                </div>
+              ))}
+            </div>
+            <div className="score-total-row">
+              <strong>Total Score</strong>
               <strong>{item.score}</strong>
             </div>
-            <p className="fine-print">
-              Age alone adds no points. Filename clues contribute at most 10. A
-              score is a sorting aid, never a verdict.
-            </p>
           </section>
+
           <section className="panel">
-            <h3>Your decisions</h3>
+            <h3>History & State</h3>
             {item.dispositionHistory?.length ? (
-              item.dispositionHistory.map((event, index) => (
-                <div className="decision" key={index}>
-                  <strong>
-                    {
-                      (
-                        {
-                          CLOSED: "Marked closed",
-                          OPEN: "Brought back",
-                          IGNORED: "Taken off radar",
-                          SNOOZED: "Snoozed",
-                        } as Record<string, string>
-                      )[event.status]
-                    }
-                  </strong>
-                  <span>{new Date(event.at).toLocaleString()}</span>
-                </div>
-              ))
+              <div className="decision-list">
+                {item.dispositionHistory.map((event, index) => (
+                  <div className="decision-item" key={index}>
+                    <strong>
+                      {
+                        (
+                          {
+                            CLOSED: "Marked closed",
+                            OPEN: "Restored",
+                            IGNORED: "Taken off radar",
+                            SNOOZED: "Snoozed",
+                          } as Record<string, string>
+                        )[event.status] || event.status
+                      }
+                    </strong>
+                    <span>{new Date(event.at).toLocaleString()}</span>
+                  </div>
+                ))}
+              </div>
             ) : (
-              <p>No decisions yet. You’re in control.</p>
+              <p className="panel-empty-text">No state changes recorded.</p>
             )}
           </section>
         </aside>
       </div>
-      <details className="panel file-list">
-        <summary>
-          Tracked files ({item.fileCount}) <ChevronDown size={16} />
+
+      <details className="panel file-list-panel">
+        <summary className="file-list-summary">
+          <span>Tracked Files ({item.fileCount})</span>
+          <ChevronDown size={15} />
         </summary>
         <div className="table-scroll">
           <table>
             <thead>
               <tr>
-                <th>File</th>
+                <th>File Path</th>
                 <th>Size</th>
-                <th>Last modification</th>
+                <th>Modified</th>
               </tr>
             </thead>
             <tbody>
               {item.files?.map((file) => (
                 <tr key={file.relativePath}>
-                  <td>{file.relativePath}</td>
+                  <td><code>{file.relativePath}</code></td>
                   <td>
                     {file.size < 1024
                       ? `${file.size} B`
@@ -305,6 +322,7 @@ export function Detail({
           </table>
         </div>
       </details>
+
       {snooze && (
         <SnoozeDialog
           name={item.displayName}

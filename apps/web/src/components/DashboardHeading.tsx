@@ -1,13 +1,7 @@
-import {
-  RotateCw,
-  Radar,
-  ArrowUpRight,
-  Clock3,
-  ScanLine,
-  CheckCheck,
-} from "lucide-react";
-import type { Root, WorkItem, ScanProgress } from "../../../../shared/types";
+import { RotateCw, Check } from "lucide-react";
+import type { Root, WorkItem } from "../../../../shared/types";
 import type { Page, Mutation } from "../types";
+
 export function DashboardHeading({
   page,
   radar,
@@ -34,97 +28,74 @@ export function DashboardHeading({
   navigate: (page: Page) => void;
 }) {
   return (
-    <>
-      <div className="dashboard-heading">
-        <div className="page-heading">
-          <div className="eyebrow">
+    <div className="dashboard-header-container">
+      <div className="dashboard-title-row">
+        <div>
+          <h1 className="page-main-title">
             {page === "radar"
-              ? "A LITTLE CLARITY FOR YOUR NEXT STEP"
-              : "YOUR WORK, YOUR CALL"}
-          </div>
-          <h1>
-            {page === "radar"
-              ? "Find the work you left open."
+              ? "Radar"
               : page === "closed"
-                ? "A little closure."
+                ? "Closed Items"
                 : "Off the Radar"}
           </h1>
-          <p>
+          <p className="page-main-desc">
             {page === "radar"
-              ? "The loose ends, quiet projects, and small things worth another look."
+              ? "Tracked loose ends and projects across your mounted folders."
               : page === "closed"
-                ? "Work you’ve marked closed. Its history stays right here."
-                : "Intentionally set aside. Bring anything back when you’re ready."}
+                ? "Work marked closed. History and evidence remain stored."
+                : "Excluded items intentionally hidden from your active radar."}
           </p>
         </div>
+
         <button
-          className="primary scan-button"
+          className="scan-btn primary"
           disabled={busy || !!running || !roots.length}
           onClick={() => void mutate("/scans")}
         >
-          <RotateCw size={17} className={running ? "spinning" : ""} />
-          {running ? "Sweeping…" : "Scan now"}
+          <RotateCw size={15} className={running ? "spinning" : ""} />
+          {running ? "Scanning…" : "Scan now"}
         </button>
       </div>
+
       {page === "radar" && (
-        <div className="summary-grid">
+        <div className="metric-pills-bar">
           <button
-            className="summary-card total"
+            type="button"
+            className="metric-pill"
             onClick={() => setFilter("All loose ends")}
           >
-            <span className="summary-icon">
-              <Radar size={21} />
-            </span>
-            <div>
-              <span>On your radar</span>
-              <strong>
-                {radar.length.toString().padStart(2, "0")}
-                <small>loose ends</small>
-              </strong>
-            </div>
-            <ArrowUpRight size={17} />
-          </button>
-          <button className="summary-card" onClick={() => setFilter("Fading")}>
-            <span className="summary-icon amber">
-              <Clock3 size={21} />
-            </span>
-            <div>
-              <span>Fading</span>
-              <strong>
-                {fading.length.toString().padStart(2, "0")}
-                <small>worth revisiting</small>
-              </strong>
-            </div>
+            <span className="metric-pill-label">All loose ends</span>
+            <span className="metric-pill-value">{radar.length}</span>
           </button>
           <button
-            className="summary-card"
+            type="button"
+            className="metric-pill fading"
+            onClick={() => setFilter("Fading")}
+          >
+            <span className="metric-pill-dot amber" />
+            <span className="metric-pill-label">Fading</span>
+            <span className="metric-pill-value">{fading.length}</span>
+          </button>
+          <button
+            type="button"
+            className="metric-pill active"
             onClick={() => setFilter("Still Active")}
           >
-            <span className="summary-icon sage">
-              <ScanLine size={21} />
-            </span>
-            <div>
-              <span>Still active</span>
-              <strong>
-                {active.length.toString().padStart(2, "0")}
-                <small>in motion</small>
-              </strong>
-            </div>
+            <span className="metric-pill-dot cyan" />
+            <span className="metric-pill-label">Still Active</span>
+            <span className="metric-pill-value">{active.length}</span>
           </button>
-          <button className="summary-card" onClick={() => navigate("closed")}>
-            <span className="summary-icon slate">
-              <CheckCheck size={21} />
-            </span>
-            <div>
-              <span>Recently closed</span>
-              <strong>
-                {closed.length.toString().padStart(2, "0")}
-                <small>set to rest</small>
-              </strong>
-            </div>
+          <button
+            type="button"
+            className="metric-pill closed"
+            onClick={() => navigate("closed")}
+          >
+            <span className="metric-pill-dot slate" />
+            <span className="metric-pill-label">Closed</span>
+            <span className="metric-pill-value">{closed.length}</span>
           </button>
         </div>
       )}
-    </>
+    </div>
   );
 }
