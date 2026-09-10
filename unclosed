@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+set -euo pipefail
+project="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+host_path() {
+  if command -v cygpath >/dev/null 2>&1; then cygpath -am "$1"; else printf '%s\n' "$1"; fi
+}
+host_project="$(host_path "$project")"
+generated="$project/.unclosed/compose.json"
+command="${1:-help}"
+if [[ $# -gt 0 ]]; then shift; fi
+compose=(docker compose -p unclosed --project-directory "$project")
+if [[ -f "$generated" ]]; then compose+=(-f "$generated"); else compose+=(-f "$project/docker-compose.yml"); fi
+case "$command" in
+  start)
+    if [[ $# -gt 0 ]]; then
+      folders=()
+      for folder in "$@"; do
+        if [[ ! -d "$folder" ]]; then printf 'Folder does not exist: %s\n' "$folder" >&2; exit 1; fi
+        folders+=("$(host_path "$(cd -- "$folder" && pwd -P)")")
+      done
+      docker compose -p unclosed --project-directory "$project" -f "$project/docker-compose.yml" build
+      mkdir -p "$project/.unclosed"
+      # Compose configuration is generated in the application image, not by a host dependency.
+      MSYS_NO_PATHCONV=1 docker run --rm --network none --read-only --entrypoint node unclosed:local /app/scripts/configure.mjs "$host_project" "${folders[@]}" > "$generated.tmp"
+      mv -- "$generated.tmp" "$generated"
+      compose=(docker compose -p unclosed --project-directory "$project" -f "$generated")
+      "${compose[@]}" up -d --no-build --wait
+    else
+      "${compose[@]}" up -d --build --wait
+    fi
+    printf '\nUnclosed is ready at http://localhost:3000\n'
+    ;;
+  stop) "${compose[@]}" stop ;;
+  restart) "${compose[@]}" restart ;;
+  logs) "${compose[@]}" logs --follow --tail 100 ;;
+  status) "${compose[@]}" ps ;;
+  *) printf 'Usage: ./unclosed {start [folders...]|stop|restart|logs|status}\n' ;;
+esac

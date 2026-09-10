@@ -1,0 +1,4 @@
+Japan itinerary
+Tokyo, Kyoto, Osaka
+
+TK: add train departure times.

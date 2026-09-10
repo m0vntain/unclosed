@@ -1,0 +1,22 @@
+services:
+  unclosed:
+    build: .
+    image: unclosed:local
+    init: true
+    ports:
+      - "127.0.0.1:3000:3000"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    environment:
+      UNCLOSED_FALLBACK_SOURCE: ${UNCLOSED_FOLDER_1:-example-workspace}
+    volumes:
+      - unclosed-data:/data
+      - type: bind
+        source: ${UNCLOSED_FOLDER_1:-./example-workspace}
+        target: /scan/folder-1
+        read_only: true
+        bind:
+          create_host_path: false
+volumes:
+  unclosed-data:
