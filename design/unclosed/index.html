@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Unclosed · Design handoff</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#dedee3;color:#24242c;font:14px/1.5 'Segoe UI',Arial,sans-serif}header{padding:16px 24px;background:#fff;border-bottom:1px solid #ccc;display:flex;gap:20px;align-items:center;flex-wrap:wrap}h1{font-size:16px;margin:0}label{display:flex;gap:8px;align-items:center}select,a{min-height:44px;padding:10px;border:1px solid #b7b7c2;border-radius:8px;background:white;color:inherit}p{margin:0;color:#626271}.stage{padding:24px 0;display:flex;justify-content:center}iframe{border:0;background:#f0f0f0;width:1440px;max-width:100%;height:calc(100vh - 150px);min-height:650px;box-shadow:0 8px 40px #25253215}a{display:inline-flex;align-items:center;text-decoration:none}:focus-visible{outline:3px solid #555567;outline-offset:3px}@media(max-width:700px){header{padding:12px;gap:12px}.stage{padding:0}iframe{height:80vh}label{flex-wrap:wrap}}
+</style>
+<header><div><h1>Unclosed / Visual system</h1><p>Interactive mockups · illustrative data · no files scanned</p></div><label>Screen <select id="scene"></select></label><label>Width <select id="size"><option value="1440">Desktop · 1440</option><option value="1152">Laptop · 1152</option><option value="768">Tablet · 768</option><option value="390">Mobile · 390</option><option value="375">Mobile · 375</option><option value="430">Mobile · 430</option></select></label><a href="HANDOFF.md">Developer handoff</a><a id="direct" target="_blank">Open screen ↗</a></header>
+<p style="padding:8px 24px;font-size:12px">The preview fits the available panel width. Open screen for a full-window view; widen the panel to inspect desktop layouts at native size.</p>
+<div class="stage"><iframe title="Unclosed responsive mockup" id="preview"></iframe></div>
+<script>
+const scenes={radar:'01 · Radar',scanning:'02 · Scanning',complete:'03 · Sweep complete',detail:'04 · Work-item detail',closed:'05 · Closed',changed:'06 · Changed after close',off:'07 · Off the Radar',settings:'08 · Settings',clear:'09 · Radar clear',first:'10 · No folders / first run',snooze:'11 · Snooze',loading:'12a · Loading',warning:'12b · Filesystem warning',components:'Components & interaction states'};
+const scene=document.querySelector('#scene'),size=document.querySelector('#size'),frame=document.querySelector('#preview');
+Object.entries(scenes).forEach(([value,text])=>scene.add(new Option(text,value)));
+const params=new URLSearchParams(location.search);scene.value=params.get('scene')||'radar';size.value=params.get('width')||'1440';
+function update(){frame.style.width=size.value+'px';frame.src='mockup.html?scene='+scene.value;document.querySelector('#direct').href=frame.src;history.replaceState(null,'','?scene='+scene.value+'&width='+size.value)}scene.onchange=update;size.onchange=update;update();
+</script></html>

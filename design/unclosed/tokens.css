@@ -1,0 +1,15 @@
+/* Unclosed visual handoff. Adapted from Canva DAHVTqtsiWk; see HANDOFF.md for provenance. */
+:root {
+  --canvas:#f0f0f0; --surface:#ffffff; --surface-muted:#f6f6f8; --surface-selected:#e4e5ee;
+  --ink:#161619; --text-secondary:#626270; --text-muted:#6b6b76; --line:#dcdce3; --line-strong:#858593;
+  --accent:#555567; --accent-hover:#444455; --accent-pressed:#333342; --on-accent:#ffffff;
+  --attention:#935138; --attention-soft:#f8eee9; --fading:#705c8c; --fading-soft:#f1edf6;
+  --active:#315f70; --active-soft:#eaf1f4; --closed:#426553; --closed-soft:#edf3ef;
+  --font-body:'Proxima Nova','Segoe UI',Arial,sans-serif;
+  --font-heading:'Neue Machina','Proxima Nova','Segoe UI',Arial,sans-serif;
+  --font-mono:ui-monospace,'Cascadia Code',Consolas,monospace;
+  --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px; --space-6:24px; --space-8:32px; --space-12:48px;
+  --radius-control:8px; --radius-card:16px; --radius-small:4px;
+  --shadow-hover:0 8px 24px #2929340a; --shadow-overlay:0 12px 40px #2929341f;
+  --motion:180ms; --ease:cubic-bezier(.2,.7,.2,1);
+}
